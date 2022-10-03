@@ -459,6 +459,51 @@ void DrawEllipse(int centerX, int centerY, float radiusH, float radiusV, Color c
     rlEnd();
 }
 
+// Draw ellipse with pro parameters
+void DrawEllipsePro(Vector2 center, Vector2 radius, Vector2 origin, float angle, Color col)
+{
+	if ( angle == 0 )
+	{
+		center.x -= origin.x;
+		center.y -= origin.y;
+	}
+	else
+	{
+		float sinRotation = sinf(angle*DEG2RAD);
+		float cosRotation = cosf(angle*DEG2RAD);
+		Vector2 pivot = {center.x + origin.x, center.y + origin.y};
+		Vector2 newPos = center;
+		Vector2 finalPos;
+		newPos.x -= pivot.x;
+		newPos.y -= pivot.y;
+			
+		finalPos.x = newPos.x * cosRotation - newPos.y * sinRotation;
+		finalPos.y = newPos.x * sinRotation + newPos.y * cosRotation;
+				
+		center.x += finalPos.x;
+		center.y += finalPos.y;
+	}
+	
+	rlCheckRenderBatchLimit(3*36);
+	
+	rlPushMatrix();
+		rlTranslatef(center.x, center.y, 0.0f);
+		rlRotatef(angle, 0.0f, 0.0f, 1.0f);
+		
+		rlBegin(RL_TRIANGLES);
+			for (int i = 0; i < 360; i += 10)
+			{
+				rlColor4ub(col.r, col.g, col.b, col.a);
+				
+				rlVertex2f(0, 0);
+				rlVertex2f(sinf(DEG2RAD*i)*radius.x, cosf(DEG2RAD*i)*radius.y);
+				
+				rlVertex2f(sinf(DEG2RAD*(i + 10))*radius.x, cosf(DEG2RAD*(i + 10))*radius.y);
+			}
+		rlEnd();
+	rlPopMatrix();
+}
+
 // Draw ellipse outline
 void DrawEllipseLines(int centerX, int centerY, float radiusH, float radiusV, Color color)
 {
@@ -469,6 +514,55 @@ void DrawEllipseLines(int centerX, int centerY, float radiusH, float radiusV, Co
             rlVertex2f(centerX + sinf(DEG2RAD*i)*radiusH, centerY + cosf(DEG2RAD*i)*radiusV);
             rlVertex2f(centerX + sinf(DEG2RAD*(i + 10))*radiusH, centerY + cosf(DEG2RAD*(i + 10))*radiusV);
         }
+    rlEnd();
+}
+
+// Draw ellipse outline with pro parameters
+void DrawEllipseLinesPro(Vector2 center, Vector2 radius, Vector2 origin, float rotation, float lineThick, Color color)
+{
+    if ( rotation == 0 )
+	{
+		center.x -= origin.x;
+		center.y -= origin.y;
+	}
+	else
+	{
+		float sinRotation = sinf(rotation*DEG2RAD);
+		float cosRotation = cosf(rotation*DEG2RAD);
+		Vector2 pivot = {center.x + origin.x, center.y + origin.y};
+		Vector2 newPos = center;
+		Vector2 finalPos;
+		newPos.x -= pivot.x;
+		newPos.y -= pivot.y;
+			
+		finalPos.x = newPos.x * cosRotation - newPos.y * sinRotation;
+		finalPos.y = newPos.x * sinRotation + newPos.y * cosRotation;
+				
+		center.x += finalPos.x;
+		center.y += finalPos.y;
+	}
+	radius.x -= lineThick / 2;
+	radius.y -= lineThick / 2;
+	
+	rlCheckRenderBatchLimit(2*36*lineThick*2);
+	
+	rlPushMatrix();
+		rlTranslatef(center.x, center.y, 0.0f);
+		rlRotatef(rotation, 0.0f, 0.0f, 1.0f);
+
+		rlBegin(RL_LINES);
+		for (float line = 0; line < lineThick * 2; line++)
+		{
+			for (int i = 0; i < 360; i += 10)
+			{
+				rlColor4ub(color.r, color.g, color.b, color.a);
+				rlVertex2f(sinf(DEG2RAD*i)*radius.x, cosf(DEG2RAD*i)*radius.y);
+				rlVertex2f(sinf(DEG2RAD*(i + 10))*radius.x, cosf(DEG2RAD*(i + 10))*radius.y);
+			}
+			radius.x += 0.5;
+			radius.y += 0.5;
+		}
+	rlPopMatrix();
     rlEnd();
 }
 
@@ -836,6 +930,60 @@ void DrawRectangleLinesEx(Rectangle rec, float lineThick, Color color)
     DrawRectangleRec(bottom, color);
     DrawRectangleRec(left, color);
     DrawRectangleRec(right, color);
+}
+
+// Draw rectangle outline with pro parameters
+void DrawRectangleLinesPro(Rectangle rec, Vector2 origin, float rotation, float lineThick, Color color)
+{
+	if ((lineThick > rec.width) || (lineThick > rec.height))
+    {
+        if (rec.width > rec.height) lineThick = rec.height/2;
+        else if (rec.width < rec.height) lineThick = rec.width/2;
+    }
+	
+	Vector2 topLeft = { 0 };
+    Vector2 topRight = { 0 };
+    Vector2 bottomLeft = { 0 };
+    Vector2 bottomRight = { 0 };
+	
+	float sinRotation = sinf(rotation*DEG2RAD);
+    float cosRotation = cosf(rotation*DEG2RAD);
+	Vector2 gapLength = { lineThick / 2 * cosRotation,  lineThick / 2 * sinRotation};
+
+    // Only calculate rotation if needed
+    if (rotation == 0.0f)
+    {
+        float x = rec.x - origin.x;
+        float y = rec.y - origin.y;
+        topLeft = (Vector2){ x, y };
+        topRight = (Vector2){ x + rec.width, y };
+        bottomLeft = (Vector2){ x, y + rec.height };
+        bottomRight = (Vector2){ x + rec.width, y + rec.height };
+    }
+    else
+    {
+        float x = rec.x;
+        float y = rec.y;
+        float dx = -origin.x;
+        float dy = -origin.y;
+
+        topLeft.x = x + dx*cosRotation - dy*sinRotation;
+        topLeft.y = y + dx*sinRotation + dy*cosRotation;
+
+        topRight.x = x + (dx + rec.width)*cosRotation - dy*sinRotation;
+        topRight.y = y + (dx + rec.width)*sinRotation + dy*cosRotation;
+
+        bottomLeft.x = x + dx*cosRotation - (dy + rec.height)*sinRotation;
+        bottomLeft.y = y + dx*sinRotation + (dy + rec.height)*cosRotation;
+
+        bottomRight.x = x + (dx + rec.width)*cosRotation - (dy + rec.height)*sinRotation;
+        bottomRight.y = y + (dx + rec.width)*sinRotation + (dy + rec.height)*cosRotation;
+    }
+
+	DrawLineEx((Vector2){topLeft.x - gapLength.x, topLeft.y - gapLength.y}, (Vector2){topRight.x + gapLength.x, topRight.y + gapLength.y}, lineThick, color);
+	DrawLineEx((Vector2){bottomLeft.x - gapLength.x, bottomLeft.y - gapLength.y }, (Vector2){bottomRight.x + gapLength.x, bottomRight.y + gapLength.y}, lineThick, color);
+	DrawLineEx(topLeft, bottomLeft, lineThick, color);
+	DrawLineEx(topRight, bottomRight, lineThick, color);
 }
 
 // Draw rectangle with rounded edges
@@ -1339,6 +1487,112 @@ void DrawTriangleLines(Vector2 v1, Vector2 v2, Vector2 v3, Color color)
     rlEnd();
 }
 
+// Draw a triangle using lines with pro parameters
+void DrawTriangleLinesPro(Vector2 v1, Vector2 v2, Vector2 v3, float lineThick, Color color)
+{
+	float lineRadius = lineThick / 2;
+	// TODO: sometimes outer and lower lines gets mixed up. This is a hack to stop that. There is a better way
+	Vector2 copy;
+	if ( v1.y > v2.y || v1.y > v3.y ) // ensure v1 is the highest point
+	{
+		if ( v2.y > v3.y )
+		{
+			copy = v1;
+			v1 = v3;
+			v3 = copy;
+		}
+		else
+		{
+			copy = v1;
+			v1 = v2;
+			v2 = copy;
+		}
+	}
+	if ( v2.y > v3.y ) // ensure v2 is higher than v3
+	{
+		copy = v2;
+		v2 = v3;
+		v3 = copy;
+	}
+	// calculate midpoints
+	Vector2 leftMid = {(v1.x + v2.x) / 2, (v1.y + v2.y) / 2};
+	Vector2 rightMid = {(v1.x + v3.x) / 2, (v1.y + v3.y) / 2};
+	Vector2 bottomMid = {(v2.x + v3.x) / 2, (v2.y + v3.y) / 2};
+	
+	// calculate triangle lines (y=mx+b notation)
+	float bottomSlope;
+	float leftSlope;
+	float rightSlope;
+	bottomSlope = (v3.y - v2.y) / (v3.x - v2.x);
+	leftSlope = (v1.y - v2.y) / (v1.x - v2.x);
+	rightSlope = (v1.y - v3.y) / (v1.x - v3.x);
+	
+	// calculate midpoints of outline
+	float perpLeftSlope = -1 / leftSlope;
+	float perpRightSlope = -1 / rightSlope;
+	float perpBottomSlope = -1 / bottomSlope;
+	
+	float perpLeftAngle = atan(perpLeftSlope);
+	float perpRightAngle = atan(perpRightSlope);
+	float perpBottomAngle = atan(perpBottomSlope);
+	
+	Vector2 outerLeftMid = {leftMid.x - lineRadius * cosf(perpLeftAngle), leftMid.y - lineRadius * sinf(perpLeftAngle)};
+	Vector2 outerRightMid = {rightMid.x + lineRadius * cosf(perpRightAngle), rightMid.y + lineRadius * sinf(perpRightAngle)};
+	Vector2 outerBottomMid = {bottomMid.x - lineRadius * cosf(perpBottomAngle), bottomMid.y - lineRadius * sinf(perpBottomAngle)};
+	
+	// calculate midpoints of inline
+	Vector2 innerLeftMid = {leftMid.x + lineRadius * cosf(perpLeftAngle), leftMid.y + lineRadius * sinf(perpLeftAngle)};
+	Vector2 innerRightMid = {rightMid.x - lineRadius * cosf(perpRightAngle), rightMid.y - lineRadius * sinf(perpRightAngle)};
+	Vector2 innerBottomMid = {bottomMid.x + lineRadius * cosf(perpBottomAngle), bottomMid.y + lineRadius * sinf(perpBottomAngle)};
+	
+	// calculate outline lines (parallel to the triangle lines at lineRadius distance away)
+	float outerLeftYcept = outerLeftMid.y - leftSlope * outerLeftMid.x;
+	float outerRightYcept = outerRightMid.y - rightSlope * outerRightMid.x;
+	float outerBottomYcept = outerBottomMid.y - bottomSlope * outerBottomMid.x;
+	
+	float outerTopX = (outerRightYcept - outerLeftYcept) / (leftSlope - rightSlope);
+	float outerTopY = leftSlope * outerTopX + outerLeftYcept;
+	Vector2 outerTop = {outerTopX, outerTopY};
+	
+	float outerLeftX = (outerBottomYcept - outerLeftYcept) / (leftSlope - bottomSlope);
+	float outerLeftY = leftSlope * outerLeftX + outerLeftYcept;
+	Vector2 outerLeft = {outerLeftX, outerLeftY};
+	
+	float outerRightX = (outerBottomYcept - outerRightYcept) / (rightSlope - bottomSlope);
+	float outerRightY = rightSlope * outerRightX + outerRightYcept;
+	Vector2 outerRight = {outerRightX, outerRightY};
+	
+	// calculate inner lines
+	float innerLeftYcept = innerLeftMid.y - leftSlope * innerLeftMid.x;
+	float innerRightYcept = innerRightMid.y - rightSlope * innerRightMid.x;
+	float innerBottomYcept = innerBottomMid.y - bottomSlope * innerBottomMid.x;
+	
+	float innerTopX = (innerRightYcept - innerLeftYcept) / (leftSlope - rightSlope);
+	float innerTopY = leftSlope * innerTopX + innerLeftYcept;
+	Vector2 innerTop = {innerTopX, innerTopY};
+	
+	float innerLeftX = (innerBottomYcept - innerLeftYcept) / (leftSlope - bottomSlope);
+	float innerLeftY = leftSlope * innerLeftX + innerLeftYcept;
+	Vector2 innerLeft = {innerLeftX, innerLeftY};
+	
+	float innerRightX = (innerBottomYcept - innerRightYcept) / (rightSlope - bottomSlope);
+	float innerRightY = rightSlope * innerRightX + innerRightYcept;
+	Vector2 innerRight = {innerRightX, innerRightY};
+	
+	// left strip
+	DrawTriangle(outerLeftMid, outerLeft, innerLeft, color);
+	DrawTriangle(innerTop, outerLeftMid, innerLeft, color);
+	DrawTriangle(outerTop, outerLeftMid, innerTop, color);
+	// right strip
+	DrawTriangle(outerTop, innerTop, outerRightMid, color);
+	DrawTriangle(innerTop, innerRight, outerRightMid, color);
+	DrawTriangle(outerRightMid, innerRight, outerRight, color);
+	// bottom strip
+	DrawTriangle(innerRight, outerBottomMid, outerRight, color);
+	DrawTriangle(innerLeft, outerBottomMid, innerRight, color);
+	DrawTriangle(innerLeft, outerLeft, outerBottomMid, color);
+};
+
 // Draw a triangle fan defined by points
 // NOTE: First vertex provided is the center, shared by all triangles
 // By default, following vertex should be provided in counter-clockwise order
@@ -1442,6 +1696,113 @@ void DrawPoly(Vector2 center, int sides, float radius, float rotation, Color col
 #endif
 }
 
+// Draw a bi-directional polygon of n sides (Vector version)
+void DrawPolyEx(Vector2 center, int sides, Vector2 radius, float angle, Color col)
+{
+    if (sides < 3) sides = 3;
+    float centralAngle = 0.0f;
+
+#if defined(SUPPORT_QUADS_DRAW_MODE)
+    rlCheckRenderBatchLimit(4*sides); // Each side is a quad
+#else
+    rlCheckRenderBatchLimit(3*sides);
+#endif
+
+    rlPushMatrix();
+        rlTranslatef(center.x, center.y, 0.0f);
+        rlRotatef(angle, 0.0f, 0.0f, 1.0f);
+
+#if defined(SUPPORT_QUADS_DRAW_MODE)
+		rlSetTexture(texShapes.id);
+
+		rlBegin(RL_QUADS);
+			for (int i = 0; i < sides; i++)
+			{
+				rlColor4ub(col.r, col.g, col.b, col.a);
+
+				rlTexCoord2f(texShapesRec.x/texShapes.width, texShapesRec.y/texShapes.height);
+				rlVertex2f(0, 0);
+
+				rlTexCoord2f(texShapesRec.x/texShapes.width, (texShapesRec.y + texShapesRec.height)/texShapes.height);
+				rlVertex2f(sinf(DEG2RAD*centralAngle)*radius.x, cosf(DEG2RAD*centralAngle)*radius.y);
+
+				rlTexCoord2f((texShapesRec.x + texShapesRec.width)/texShapes.width, (texShapesRec.y + texShapesRec.height)/texShapes.height);
+				rlVertex2f(sinf(DEG2RAD*centralAngle)*radius.x, cosf(DEG2RAD*centralAngle)*radius.y);
+
+				centralAngle += 360.0f/(float)sides;
+				rlTexCoord2f((texShapesRec.x + texShapesRec.width)/texShapes.width, texShapesRec.y/texShapes.height);
+				rlVertex2f(sinf(DEG2RAD*centralAngle)*radius.x, cosf(DEG2RAD*centralAngle)*radius.y);
+			}
+		rlEnd();
+		rlSetTexture(0);
+#else
+		rlBegin(RL_TRIANGLES);
+			for (int i = 0; i < sides; i++)
+			{
+				rlColor4ub(col.r, col.g, col.b, col.a);
+
+				rlVertex2f(0, 0);
+				rlVertex2f(sinf(DEG2RAD*centralAngle)*radius.x, cosf(DEG2RAD*centralAngle)*radius.y);
+
+				centralAngle += 360.0f/(float)sides;
+				rlVertex2f(sinf(DEG2RAD*centralAngle)*radius.x, cosf(DEG2RAD*centralAngle)*radius.y);
+			}
+			rlEnd();
+#endif
+	rlPopMatrix();
+}
+
+// Draw a bi-directional polygon of n sides (Vector version) with pro parameters
+void DrawPolyPro(Vector2 center, int sides, Vector2 radius, Vector2 origin, float angle, Color col)
+{
+    if (sides < 3) sides = 3;
+    float centralAngle = 0.0f;
+	if ( angle == 0 )
+	{
+		center.x -= origin.x;
+		center.y -= origin.y;
+	}
+	else
+	{
+		float sinRotation = sinf(angle*DEG2RAD);
+		float cosRotation = cosf(angle*DEG2RAD);
+		Vector2 pivot = {center.x + origin.x, center.y + origin.y};
+		Vector2 newPos = center;
+		Vector2 finalPos;
+		newPos.x -= pivot.x;
+		newPos.y -= pivot.y;
+			
+		finalPos.x = newPos.x * cosRotation - newPos.y * sinRotation;
+		finalPos.y = newPos.x * sinRotation + newPos.y * cosRotation;
+				
+		center.x += finalPos.x;
+		center.y += finalPos.y;
+	}
+#if defined(SUPPORT_QUADS_DRAW_MODE)
+    rlCheckRenderBatchLimit(4*sides); // Each side is a quad
+#else
+    rlCheckRenderBatchLimit(3*sides);
+#endif
+
+    rlPushMatrix();
+        rlTranslatef(center.x, center.y, 0.0f);
+        rlRotatef(angle, 0.0f, 0.0f, 1.0f);
+
+		rlBegin(RL_TRIANGLES);
+			for (int i = 0; i < sides; i++)
+			{
+				rlColor4ub(col.r, col.g, col.b, col.a);
+
+				rlVertex2f(0, 0);
+				rlVertex2f(sinf(DEG2RAD*centralAngle)*radius.x, cosf(DEG2RAD*centralAngle)*radius.y);
+
+				centralAngle += 360.0f/(float)sides;
+				rlVertex2f(sinf(DEG2RAD*centralAngle)*radius.x, cosf(DEG2RAD*centralAngle)*radius.y);
+			}
+		rlEnd();
+	rlPopMatrix();
+}
+
 // Draw a polygon outline of n sides
 void DrawPolyLines(Vector2 center, int sides, float radius, float rotation, Color color)
 {
@@ -1460,6 +1821,7 @@ void DrawPolyLines(Vector2 center, int sides, float radius, float rotation, Colo
     rlEnd();
 }
 
+// Draw a polygon outline of n sides with extended parameters
 void DrawPolyLinesEx(Vector2 center, int sides, float radius, float rotation, float lineThick, Color color)
 {
     if (sides < 3) sides = 3;
@@ -1509,6 +1871,91 @@ void DrawPolyLinesEx(Vector2 center, int sides, float radius, float rotation, fl
         }
     rlEnd();
 #endif
+}
+
+// Draw a bi-directional polygon outline of n sides with pro parameters
+void DrawPolyLinesPro(Vector2 center, int sides, Vector2 radius, Vector2 origin, float rotation, float lineThick, Color color)
+{
+    if (sides < 3) sides = 3;
+    float centralAngle = 0.0f;
+    float exteriorAngle = 360.0f/(float)sides;
+    Vector2 innerRadius = {radius.x - (lineThick*cosf(DEG2RAD*exteriorAngle/2.0f)), radius.y - (lineThick*cosf(DEG2RAD*exteriorAngle/2.0f))};
+	
+	if ( rotation == 0 )
+	{
+		center.x -= origin.x;
+		center.y -= origin.y;
+	}
+	else
+	{
+		float sinRotation = sinf(rotation*DEG2RAD);
+		float cosRotation = cosf(rotation*DEG2RAD);
+		Vector2 pivot = {center.x + origin.x, center.y + origin.y};
+		Vector2 newPos = center;
+		Vector2 finalPos;
+		newPos.x -= pivot.x;
+		newPos.y -= pivot.y;
+			
+		finalPos.x = newPos.x * cosRotation - newPos.y * sinRotation;
+		finalPos.y = newPos.x * sinRotation + newPos.y * cosRotation;
+				
+		center.x += finalPos.x;
+		center.y += finalPos.y;
+	}
+
+#if defined(SUPPORT_QUADS_DRAW_MODE)
+    rlCheckRenderBatchLimit(4*sides);
+#else
+    rlCheckRenderBatchLimit(6*sides);
+#endif
+
+    rlPushMatrix();
+        rlTranslatef(center.x, center.y, 0.0f);
+        rlRotatef(rotation, 0.0f, 0.0f, 1.0f);
+
+#if defined(SUPPORT_QUADS_DRAW_MODE)
+        rlSetTexture(texShapes.id);
+
+        rlBegin(RL_QUADS);
+            for (int i = 0; i < sides; i++)
+            {
+                rlColor4ub(color.r, color.g, color.b, color.a);
+
+                rlTexCoord2f(texShapesRec.x/texShapes.width, texShapesRec.y/texShapes.height);
+                rlVertex2f(sinf(DEG2RAD*centralAngle)*innerRadius.x, cosf(DEG2RAD*centralAngle)*innerRadius.y);
+
+                rlTexCoord2f(texShapesRec.x/texShapes.width, (texShapesRec.y + texShapesRec.height)/texShapes.height);
+                rlVertex2f(sinf(DEG2RAD*centralAngle)*radius.x, cosf(DEG2RAD*centralAngle)*radius.y);
+
+                centralAngle += exteriorAngle;
+                rlTexCoord2f((texShapesRec.x + texShapesRec.width)/texShapes.width, texShapesRec.y/texShapes.height);
+                rlVertex2f(sinf(DEG2RAD*centralAngle)*radius.x, cosf(DEG2RAD*centralAngle)*radius.y);
+
+                rlTexCoord2f((texShapesRec.x + texShapesRec.width)/texShapes.width, (texShapesRec.y + texShapesRec.height)/texShapes.height);
+                rlVertex2f(sinf(DEG2RAD*centralAngle)*innerRadius.x, cosf(DEG2RAD*centralAngle)*innerRadius.y);
+            }
+        rlEnd();
+        rlSetTexture(0);
+#else
+        rlBegin(RL_TRIANGLES);
+            for (int i = 0; i < sides; i++)
+            {
+                rlColor4ub(color.r, color.g, color.b, color.a);
+                float nextAngle = centralAngle + exteriorAngle;
+
+                rlVertex2f(sinf(DEG2RAD*centralAngle)*radius.x, cosf(DEG2RAD*centralAngle)*radius.y);
+                rlVertex2f(sinf(DEG2RAD*centralAngle)*innerRadius.x, cosf(DEG2RAD*centralAngle)*innerRadius.y);
+                rlVertex2f(sinf(DEG2RAD*nextAngle)*radius.x, cosf(DEG2RAD*nextAngle)*radius.y);
+
+                rlVertex2f(sinf(DEG2RAD*centralAngle)*innerRadius.x, cosf(DEG2RAD*centralAngle)*innerRadius.y);
+                rlVertex2f(sinf(DEG2RAD*nextAngle)*radius.x, cosf(DEG2RAD*nextAngle)*radius.y);
+                rlVertex2f(sinf(DEG2RAD*nextAngle)*innerRadius.x, cosf(DEG2RAD*nextAngle)*innerRadius.y);
+
+                centralAngle = nextAngle;
+            }
+        rlEnd();
+#endif
+    rlPopMatrix();
 }
 
 //----------------------------------------------------------------------------------
