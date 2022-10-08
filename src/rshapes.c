@@ -546,6 +546,29 @@ void DrawEllipseLines(int centerX, int centerY, float radiusH, float radiusV, Co
     rlEnd();
 }
 
+// Draw ellipse outline with extended parameters
+void DrawEllipseLinesEx(Vector2 center, Vector2 radius, float lineThick, Color color)
+{
+	rlCheckRenderBatchLimit(2*36*lineThick*2);
+	
+	rlPushMatrix();
+		rlTranslatef(center.x, center.y, 0.0f);
+		rlBegin(RL_LINES);
+		for (float line = 0; line < lineThick * 2; line++)
+		{
+			for (int i = 0; i < 360; i += 10)
+			{
+				rlColor4ub(color.r, color.g, color.b, color.a);
+				rlVertex2f(sinf(DEG2RAD*i)*radius.x, cosf(DEG2RAD*i)*radius.y);
+				rlVertex2f(sinf(DEG2RAD*(i + 10))*radius.x, cosf(DEG2RAD*(i + 10))*radius.y);
+			}
+			radius.x += 0.5;
+			radius.y += 0.5;
+		}
+	rlPopMatrix();
+    rlEnd();
+}
+
 // Draw ellipse outline with pro parameters
 void DrawEllipseLinesPro(Vector2 center, Vector2 radius, Vector2 origin, float rotation, float lineThick, Color color)
 {
@@ -1517,7 +1540,7 @@ void DrawTriangleLines(Vector2 v1, Vector2 v2, Vector2 v3, Color color)
 }
 
 // Draw a triangle using lines with pro parameters
-void DrawTriangleLinesPro(Vector2 v1, Vector2 v2, Vector2 v3, float lineThick, Color color)
+void DrawTriangleLinesEx(Vector2 v1, Vector2 v2, Vector2 v3, float lineThick, Color color)
 {
 	float lineRadius = lineThick / 2;
 	// TODO: sometimes outer and lower lines gets mixed up. This is a hack to stop that. There is a better way
