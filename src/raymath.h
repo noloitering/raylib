@@ -438,6 +438,22 @@ RMAPI Vector2 Vector2Rotate(Vector2 v, float angle)
     return result;
 }
 
+RMAPI Vector2 Vector2RotateAround(Vector2 v, Vector2 origin, float angle)
+{
+	Vector2 newPoint = {v.x - origin.x, v.y - origin.y};
+	Vector2 posInc;
+	// calculate values
+	float sinRotation = sinf(angle*DEG2RAD);
+	float cosRotation = cosf(angle*DEG2RAD);
+	posInc.x = newPoint.x * cosRotation - newPoint.y * sinRotation;
+	posInc.y = newPoint.x * sinRotation + newPoint.y * cosRotation;	
+	// translate back
+	newPoint.x = posInc.x + origin.x;
+	newPoint.y = posInc.y + origin.y;
+		
+	return newPoint;
+}
+
 // Move Vector towards target
 RMAPI Vector2 Vector2MoveTowards(Vector2 v, Vector2 target, float maxDistance)
 {
