@@ -3542,7 +3542,7 @@ void DrawTextureRec(Texture2D texture, Rectangle source, Vector2 position, Color
 // Draw textured polygon, defined by vertex and texture coordinates
 // NOTE: Polygon center must have straight line path to all points
 // without crossing perimeter, points must be in anticlockwise order
-void DrawTexturePoly(Texture2D texture, Vector2 center, Vector2 *points, Vector2 *texcoords, int pointCount, Color tint)
+void DrawTexturePoly(Texture2D texture, Vector2 center, Vector2 texcenter, Vector2 *points, Vector2 *texcoords, int pointCount, Color tint)
 {
     rlSetTexture(texture.id);
 
@@ -3553,7 +3553,7 @@ void DrawTexturePoly(Texture2D texture, Vector2 center, Vector2 *points, Vector2
 
         for (int i = 0; i < pointCount - 1; i++)
         {
-            rlTexCoord2f(0.5f, 0.5f);
+            rlTexCoord2f(texcenter.x, texcenter.y);
             rlVertex2f(center.x, center.y);
 
             rlTexCoord2f(texcoords[i].x, texcoords[i].y);
