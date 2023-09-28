@@ -1209,8 +1209,8 @@ RLAPI void DrawTriangleLinesEx(Vector2 v1, Vector2 v2, Vector2 v3, float lineThi
 RLAPI void DrawTriangleFan(Vector2 *points, int pointCount, Color color);                                // Draw a triangle fan defined by points (first vertex is the center)
 RLAPI void DrawTriangleStrip(Vector2 *points, int pointCount, Color color);                              // Draw a triangle strip defined by points
 RLAPI void DrawPoly(Vector2 center, int sides, float radius, float rotation, Color color);               // Draw a regular polygon (Vector version)
-RLAPI void DrawPolyEx(Vector2 center, int sides, Vector2 radius, float angle, Color col);                // Draw a bi-directional polygon of n sides (Vector version)
-RLAPI void DrawPolyPro(Vector2 center, int sides, Vector2 radius, Vector2 origin, float angle, Color col);  // Draw a bi-directional polygon of n sides (Vector version) with pro parameters
+RLAPI void DrawPolyEx(Vector2 center, int sides, Vector2 radius, float rotation, Color col);                // Draw a bi-directional polygon of n sides (Vector version)
+RLAPI void DrawPolyPro(Vector2 center, int sides, Vector2 radius, Vector2 origin, float rotation, Color col);  // Draw a bi-directional polygon of n sides (Vector version) with pro parameters
 RLAPI void DrawPolyLines(Vector2 center, int sides, float radius, float rotation, Color color);          // Draw a polygon outline of n sides
 RLAPI void DrawPolyLinesEx(Vector2 center, int sides, float radius, float rotation, float lineThick, Color color); // Draw a polygon outline of n sides with extended parameters
 RLAPI void DrawPolyLinesPro(Vector2 center, int sides, Vector2 radius, Vector2 origin, float rotation, float lineThick, Color color);  // Draw a bi-directional polygon outline of n sides with pro parameters

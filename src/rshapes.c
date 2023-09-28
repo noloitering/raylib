@@ -541,17 +541,17 @@ void DrawEllipse(int centerX, int centerY, float radiusH, float radiusV, Color c
 }
 
 // Draw ellipse with pro parameters
-void DrawEllipsePro(Vector2 center, Vector2 radius, Vector2 origin, float angle, Color col)
+void DrawEllipsePro(Vector2 center, Vector2 radius, Vector2 origin, float rotation, Color col)
 {
-	if ( angle == 0 )
+	if ( rotation == 0 )
 	{
 		center.x -= origin.x;
 		center.y -= origin.y;
 	}
 	else
 	{
-		float sinRotation = sinf(angle*DEG2RAD);
-		float cosRotation = cosf(angle*DEG2RAD);
+		float sinRotation = sinf(rotation*DEG2RAD);
+		float cosRotation = cosf(rotation*DEG2RAD);
 		Vector2 pivot = {center.x + origin.x, center.y + origin.y};
 		Vector2 newPos = center;
 		Vector2 finalPos;
@@ -569,7 +569,7 @@ void DrawEllipsePro(Vector2 center, Vector2 radius, Vector2 origin, float angle,
 	
 	rlPushMatrix();
 		rlTranslatef(center.x, center.y, 0.0f);
-		rlRotatef(angle, 0.0f, 0.0f, 1.0f);
+		rlRotatef(rotation, 0.0f, 0.0f, 1.0f);
 		
 		rlBegin(RL_TRIANGLES);
 			for (int i = 0; i < 360; i += 10)
@@ -1801,7 +1801,7 @@ void DrawPoly(Vector2 center, int sides, float radius, float rotation, Color col
 }
 
 // Draw a bi-directional polygon of n sides (Vector version)
-void DrawPolyEx(Vector2 center, int sides, Vector2 radius, float angle, Color col)
+void DrawPolyEx(Vector2 center, int sides, Vector2 radius, float rotation, Color col)
 {
     if (sides < 3) sides = 3;
     float centralAngle = 0.0f;
@@ -1814,7 +1814,7 @@ void DrawPolyEx(Vector2 center, int sides, Vector2 radius, float angle, Color co
 
     rlPushMatrix();
         rlTranslatef(center.x, center.y, 0.0f);
-        rlRotatef(angle, 0.0f, 0.0f, 1.0f);
+        rlRotatef(rotation, 0.0f, 0.0f, 1.0f);
 
 #if defined(SUPPORT_QUADS_DRAW_MODE)
 		rlSetTexture(texShapes.id);
@@ -1857,19 +1857,19 @@ void DrawPolyEx(Vector2 center, int sides, Vector2 radius, float angle, Color co
 }
 
 // Draw a bi-directional polygon of n sides (Vector version) with pro parameters
-void DrawPolyPro(Vector2 center, int sides, Vector2 radius, Vector2 origin, float angle, Color col)
+void DrawPolyPro(Vector2 center, int sides, Vector2 radius, Vector2 origin, float rotation, Color col)
 {
     if (sides < 3) sides = 3;
     float centralAngle = 0.0f;
-	if ( angle == 0 )
+	if ( rotation == 0 )
 	{
 		center.x -= origin.x;
 		center.y -= origin.y;
 	}
 	else
 	{
-		float sinRotation = sinf(angle*DEG2RAD);
-		float cosRotation = cosf(angle*DEG2RAD);
+		float sinRotation = sinf(rotation*DEG2RAD);
+		float cosRotation = cosf(rotation*DEG2RAD);
 		Vector2 pivot = {center.x + origin.x, center.y + origin.y};
 		Vector2 newPos = center;
 		Vector2 finalPos;
@@ -1890,7 +1890,7 @@ void DrawPolyPro(Vector2 center, int sides, Vector2 radius, Vector2 origin, floa
 
     rlPushMatrix();
         rlTranslatef(center.x, center.y, 0.0f);
-        rlRotatef(angle, 0.0f, 0.0f, 1.0f);
+        rlRotatef(rotation, 0.0f, 0.0f, 1.0f);
 
 		rlBegin(RL_TRIANGLES);
 			for (int i = 0; i < sides; i++)
